@@ -273,7 +273,8 @@
       </div>
     </section>
     <section class="right">
-      <h3>El evento empieza en:</h3>
+      <h3>Primero es necesario verificar su correo</h3>
+      <!-- <h3>El evento empieza en:</h3>
       <div class="counter">
         <div class="days">
           <h4 id="days">0</h4>
@@ -291,7 +292,7 @@
           <h4 id="seconds">0</h4>
           <p>Segundos</p>
         </div>
-      </div>
+      </div> -->
     </section>
   </main>
   <div class="webinar-container">
@@ -325,7 +326,7 @@
 
   <script>
     // Set the date we're counting down to
-    const countDownDate = new Date("Feb 25, 2025 7:12:00").getTime();
+    let countDownDate = new Date("Feb 25, 2025 9:52:00").getTime();
     
     const videoFile = document.getElementById("videoFile");
     
@@ -350,46 +351,6 @@
         videoFile.play();
       }
     }
-    
-    // Update the count down every 1 second
-    const x = setInterval(function() {
-      // Get today's date and time
-      const now = new Date().getTime();
-    
-      // Find the distance between now and the count down date
-      const distance = countDownDate - now;
-    
-      // Time calculations for days, hours, minutes and seconds
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-    
-      // Output the result in the elements with id="days", "hours", "minutes", "seconds"
-      document.getElementById("days").innerHTML = days;
-      document.getElementById("hours").innerHTML = hours;
-      document.getElementById("minutes").innerHTML = minutes;
-      document.getElementById("seconds").innerHTML = seconds;
-    
-      // If the count down is over, write some text 
-      if (distance < 0) {
-        clearInterval(x);
-        document.querySelector("main").style.display = "none";
-        document.querySelector(".webinar-container").style.display = "flex";
-    
-        // Check and play the video
-        checkAndPlayVideo();
-      }
-    }, 1000);
-    
-    // Add an event listener to check the video duration once it's loaded
-    videoFile.addEventListener('loadedmetadata', function() {
-      // Check and play the video if the countdown is already over
-      const now = new Date().getTime();
-      if (now > countDownDate) {
-        checkAndPlayVideo();
-      }
-    });
   
     // Add an event listener to show the last message when the video ends
     videoFile.addEventListener('ended', function() {
@@ -434,7 +395,75 @@
     fetch(url)
       .then(response => response.json())
       .then(data => {
-        console.log(data);
+        if (data.exists){
+          /* countDownDate = new Date(data.fecha_proxima).getTime(); */
+
+          const countSection = document.querySelector("main section.right");
+
+          countSection.innerHTML = `
+            <h3>El evento empieza en:</h3>
+            <div class="counter">
+              <div class="days">
+                <h4 id="days">0</h4>
+                <p>Días</p>
+              </div>
+              <div class="hours">
+                <h4 id="hours">0</h4>
+                <p>Horas</p>
+              </div>
+              <div class="minutes">
+                <h4 id="minutes">0</h4>
+                <p>Minutos</p>
+              </div>
+              <div class="seconds">
+                <h4 id="seconds">0</h4>
+                <p>Segundos</p>
+              </div>
+            </div>
+          `
+
+          // Update the count down every 1 second
+          const x = setInterval(function() {
+            // Get today's date and time
+            const now = new Date().getTime();
+          
+            // Find the distance between now and the count down date
+            const distance = countDownDate - now;
+          
+            // Time calculations for days, hours, minutes and seconds
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+          
+            // Output the result in the elements with id="days", "hours", "minutes", "seconds"
+            document.getElementById("days").innerHTML = days;
+            document.getElementById("hours").innerHTML = hours;
+            document.getElementById("minutes").innerHTML = minutes;
+            document.getElementById("seconds").innerHTML = seconds;
+          
+            // If the count down is over, write some text 
+            if (distance < 0) {
+              clearInterval(x);
+              document.querySelector("main").style.display = "none";
+              document.querySelector(".webinar-container").style.display = "flex";
+          
+              // Check and play the video
+              checkAndPlayVideo();
+            }
+          }, 1000);
+          
+          // Add an event listener to check the video duration once it's loaded
+          videoFile.addEventListener('loadedmetadata', function() {
+            // Check and play the video if the countdown is already over
+            const now = new Date().getTime();
+            if (now > countDownDate) {
+              checkAndPlayVideo();
+            }
+          });
+        } else {
+          window.location.href = "https://google.com";
+        }
       })
       .catch(error => {
         console.error('Error:', error);
