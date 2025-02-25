@@ -325,7 +325,7 @@
 
   <script>
     // Set the date we're counting down to
-    const countDownDate = new Date("Feb 25, 2025 00:40:00").getTime();
+    const countDownDate = new Date("Feb 25, 2025 7:12:00").getTime();
     
     const videoFile = document.getElementById("videoFile");
     
@@ -428,18 +428,18 @@
   }
 
   function verifyEmail() {
-      const email = document.getElementById("userEmial").value;
-      const url = `http://infoapi.multinetlabs.com/api/runaWebinar/exists/${email}`;
+    const email = document.getElementById("userEmial").value;
+    const url = `https://infoapi.multinetlabs.com/api/runaWebinar/exists/${email}`;
 
-      fetch(url)
-        .then(response => response.json())
-        .then(data => {
-          console.log(data);
-        })
-        .catch(error => {
-          console.error('Error:', error);
-        });
-    }
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }
   </script>
 </body>
 </html>
