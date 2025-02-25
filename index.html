@@ -7,6 +7,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+  <!-- Video.js CSS -->
+  <link href="https://vjs.zencdn.net/8.3.0/video-js.css" rel="stylesheet">
+  <!-- Video.js JavaScript -->
+  <script src="https://vjs.zencdn.net/8.3.0/video.min.js"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -259,6 +265,7 @@
       color: #ffffff;
       font-size: 56px;
       width: 80%;
+      z-index: 999;
     }
   </style>
 </head>
@@ -274,34 +281,19 @@
     </section>
     <section class="right">
       <h3>Primero es necesario verificar su correo</h3>
-      <!-- <h3>El evento empieza en:</h3>
-      <div class="counter">
-        <div class="days">
-          <h4 id="days">0</h4>
-          <p>Días</p>
-        </div>
-        <div class="hours">
-          <h4 id="hours">0</h4>
-          <p>Horas</p>
-        </div>
-        <div class="minutes">
-          <h4 id="minutes">0</h4>
-          <p>Minutos</p>
-        </div>
-        <div class="seconds">
-          <h4 id="seconds">0</h4>
-          <p>Segundos</p>
-        </div>
-      </div> -->
     </section>
   </main>
   <div class="webinar-container">
     <section class="webinar">
       <div class="video">
-        <video muted id="videoFile">
+        <!-- <video muted id="videoFile">
           <source src="videoTest.mp4" type="video/mp4">
           Tu navegador no soporta el video.
-        </video>  
+        </video> -->
+        <video id="videoFile" class="video-js vjs-default-skin" muted>
+          <source src="videoTest.mp4" type="video/mp4">
+          Tu navegador no soporta el video.
+        </video>        
       </div>
       <div class="chat">
         <div class="chat-box">
@@ -326,37 +318,98 @@
 
   <script>
     // Set the date we're counting down to
-    let countDownDate = new Date("Feb 25, 2025 9:52:00").getTime();
+    let countDownDate
     
     const videoFile = document.getElementById("videoFile");
-    
-    // Function to check and play the video
-    function checkAndPlayVideo() {
-      // Get today's date and time
-      const now = new Date().getTime();
-    
-      // Find the distance between now and the count down date
-      const distance = countDownDate - now;
-    
-      // Calculate the elapsed time since the countdown ended
-      const elapsedTime = Math.abs(distance) / 1000; // in seconds
-    
-      // Check if the elapsed time exceeds the video duration
-      if (elapsedTime > videoFile.duration) {
-        document.querySelector(".lastMessage").style.display = "flex";
-        return;
-      } else {
-        // Set the video current time based on the elapsed time
-        videoFile.currentTime = elapsedTime;
-        videoFile.play();
+    let watchedTime = 0;
+    let clickCount = 0;
+    let emailVerify = '';
+    let date = '';
+
+    document.addEventListener("DOMContentLoaded", () => {
+      var player = videojs("videoFile", {
+        controls: false,
+        autoplay: true,
+        loop: false,
+        fluid: true
+      });
+
+      // Eventos para métricas básicas
+      player.on("play", () => console.log("El video ha comenzado a reproducirse"));
+      player.on("pause", () => console.log("El video está en pausa"));
+      player.on("ended", () => console.log("El video ha terminado"));
+      /* player.on("timeupdate", () => console.log("Tiempo actual:", player.currentTime())); */
+      player.on("timeupdate", () => {
+        watchedTime = player.currentTime();
+      });
+      player.on("error", () => console.error("Error en la reproducción:", player.error()));
+
+      // Contar clics en el video
+      videoFile.addEventListener("click", () => {
+        clickCount++;
+        console.log("Clics en el video:", clickCount);
+      });
+
+      // Adaptar la lógica de reproducción automática
+      function checkAndPlayVideo() {
+        const now = new Date().getTime();
+        const distance = countDownDate - now;
+        const elapsedTime = Math.abs(distance) / 1000;
+
+        if (elapsedTime > player.duration()) {
+          document.querySelector(".lastMessage").style.display = "flex";
+        } else {
+          player.currentTime(elapsedTime);
+          player.play();
+        }
       }
-    }
-  
-    // Add an event listener to show the last message when the video ends
-    videoFile.addEventListener('ended', function() {
-      document.querySelector(".lastMessage").style.display = "flex";
+
+      player.on("loadedmetadata", function () {
+        if (new Date().getTime() > countDownDate) {
+          checkAndPlayVideo();
+        }
+      });
+
+      player.on("ended", function () {
+        document.querySelector(".lastMessage").style.display = "flex";
+      });
+
+      // Capturar el tiempo visto cuando el usuario cierra la pestaña
+      window.addEventListener("beforeunload", () => {
+        const params = {
+          email: '',
+          date: '',
+          clickCounter: 0,
+          videoTimeView: 0
+        };
+
+        params.email = emailVerify;
+        params.date = date;
+        params.clickCounter = clickCount;
+        params.videoTimeView = watchedTime;
+        
+        sendStatistics(params)
+      });
     });
 
+    function sendStatistics(params) {
+      const url = 'https://infoapi.multinetlabs.com/api/runaWebinar/updateClickView';
+
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(params)
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Success:', data);
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+    }
     
     function sendMessage() {
     let chatBox = document.querySelector(".chat-box");
@@ -396,7 +449,10 @@
       .then(response => response.json())
       .then(data => {
         if (data.exists){
-          /* countDownDate = new Date(data.fecha_proxima).getTime(); */
+          countDownDate = new Date(data.fecha_proxima).getTime();
+
+          emailVerify = data.email;
+          date = data.fecha_proxima;
 
           const countSection = document.querySelector("main section.right");
 
